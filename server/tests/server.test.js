@@ -1,12 +1,15 @@
 const expect = require('expect');
 const request = require('supertest');
+let {ObjectID} = require('mongodb')
 
 let {app} = require('./../server');
 let {Todo} = require('./../models/todo');
 
 const todos = [{
+    _id:new ObjectID(),
     text:'Primeiro teste Todo'
 },{
+    _id:new ObjectID(),
     text:'Segundo teste Todo'
 }];
 
@@ -68,5 +71,33 @@ describe('POST /todos', () => {
                 })
                 .end(done);
         });
-    })
+    });
+
+    describe('GET /todos/:id', () => {
+        it('Deveria retornar todo doc', (done) => {
+            request(app)
+                .get(`/todos/${todos[0]._id.toHexString()}`)
+                .expect(200)
+                .expect((res) => {
+                    expect(res.body.todo.text).toBe(todos[0].text)
+                })
+                .end(done);
+        });
+
+        it('Deveria retornar erro 404 se todo não foi achado', (done) => {
+            let hexId = new ObjectID().toHexString();
+
+             request(app)
+                 .get(`/todos/${hexId}`)
+                 .expect(404)
+                 .end(done);
+        });
+
+        it('Deveria retornar erro 404 para objetos não encontrados', (done) => {
+            request(app)
+                .get('/todos/123abc')
+                .expect(404)
+                .end(done);
+            });
+        });
 });
